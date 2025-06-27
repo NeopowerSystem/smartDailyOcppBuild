@@ -1,0 +1,23 @@
+{
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npx tsup ./server.js ./routes.js ./api/**/*.js ./controller/**/*.js ./emit_smartDaily/**/*.js --format esm,cjs --out-dir dist && cp -r public dist/ && cp package.json dist/ && cd dist && npm install --production"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "better-sqlite3": "^11.5.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.19.2",
+    "modbus-serial": "^8.0.18",
+    "ocpp-rpc": "^2.1.2",
+    "serialport": "^13.0.0",
+    "winston": "^3.14.1",
+    "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  }
+}

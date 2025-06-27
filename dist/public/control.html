@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCPP Client Control</title>
+    <link rel="stylesheet" href="control.css">
+    <script>
+        function getAllClients() {
+            fetch('/ocppAPI/getAllClient', {
+                method: 'POST',
+                headers:{
+                    'neopower-api-key': 'neopower_ocpp_key'
+                }
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('GetAllClients response:', data);
+                updateResponseArea('GetAllClients', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function getWaitingQueue() {
+            fetch('/ocppAPI/getWaitingQueue', {  // 使用 GET 方法
+                method: 'GET',
+                headers: {
+                    'neopower-api-key': 'neopower_ocpp_key'
+                }
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('GetWaitingQueue response:', data);
+                updateResponseArea('GetWaitingQueue', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+
+        function remoteStartCharging() {
+            const chargerId = document.getElementById('startChargerId').value.trim();
+            
+            // 動態構建要傳送的資料物件
+            const requestData = {};
+        
+            // 只有當欄位有值時，才會將它加到 requestData 中
+            if (chargerId) requestData.chargerId = chargerId;
+            
+            fetch('/ocppAPI/remoteStartCharging', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                },
+                body: JSON.stringify(requestData) // 只傳送有值的欄位
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('RemoteStartCharging response:', data);
+                updateResponseArea('RemoteStartCharging', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+
+        function remoteStopCharging() {
+            const transactionId = document.getElementById('stopTransactionId').value;
+
+            fetch('/ocppAPI/remoteStopCharging', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                },
+                body: JSON.stringify({ transactionId: parseInt(transactionId) })
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('RemoteStopCharging response:', data);
+                updateResponseArea('RemoteStopCharging', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function getCompositeSchedule() {
+            const chargerId = document.getElementById('chargerId_getCompositeSchedule').value.trim();
+            const connectorId = document.getElementById('connectorId_getCompositeSchedule').value.trim();
+            const duration = document.getElementById('duration_getCompositeSchedule').value.trim();
+            const chargingRateUnit = document.getElementById('chargingRateUnit_getCompositeSchedule').value.trim();
+            
+            // 構建要傳送的資料物件
+            const requestData = {};
+        
+            // 只有當欄位有值時，才會將它加到 requestData 中
+            if (chargerId) requestData.chargerId = chargerId;
+            if (connectorId) requestData.connectorId = parseInt(connectorId);
+            if (duration) requestData.duration = parseInt(duration);
+            if (chargingRateUnit) requestData.chargingRateUnit = chargingRateUnit;
+            
+            console.log("requestData:", requestData);
+    
+            fetch('/ocppAPI/getCompositeSchedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                },
+                body: JSON.stringify(requestData) // 傳送有值的欄位
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('GetCompositeSchedule response:', data);
+                updateResponseArea('GetCompositeSchedule', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function setChargingProfile() {
+            const chargerId = document.getElementById('chargerId_setChargingProfile').value;
+            const connectorId = document.getElementById('connectorId_setChargingProfile').value;
+            const control_unit = document.getElementById('control_unit_setChargingProfile').value;
+            const limit = document.getElementById('limit_setChargingProfile').value;
+            
+            // 驗證必需的參數
+            if (!chargerId || !connectorId) {
+                alert('Charger ID 和 connectorId 是必填項');
+                return;
+            }
+    
+            fetch('/ocppAPI/setChargingProfile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                },
+                body: JSON.stringify({ chargerId, connectorId: parseInt(connectorId, 10), control_unit, limit: parseFloat(limit) })
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('SetChargingProfile response:', data);
+                updateResponseArea('SetChargingProfile', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function getChargerInfo() {
+            const chargerId = document.getElementById('chargerId_getChargerInfo').value.trim(); // 去除多餘的空白字符
+            const key = document.getElementById('key_getChargerInfo').value.trim(); // 去除多餘的空白字符
+        
+            // 構造請求的 body
+            const requestBody = {
+                chargerId: chargerId,
+                keys: key
+            };
+        
+            // 發送 POST 請求
+            fetch('/ocppAPI/getChargerInfo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                },
+                body: JSON.stringify(requestBody) // 將請求的 body 轉換為 JSON 字符串
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('GetChargerInfo response:', data);
+                updateResponseArea('GetChargerInfo', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        function setChargerInfo() {
+            const chargerId = document.getElementById('chargerId_setChargerInfo').value.trim(); // 去除多餘的空白字符
+            const key = document.getElementById('key_setChargerInfo').value.trim(); // 去除多餘的空白字符
+            const value = document.getElementById('value_setChargerInfo').value.trim(); // 去除多餘的空白字符
+        
+            // 構造請求的 body
+            const requestBody = {
+                chargerId: chargerId,
+                key: key,
+                value: value
+            };
+        
+            // 發送 POST 請求
+            fetch('/ocppAPI/set_charger_info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                },
+                body: JSON.stringify(requestBody) // 將請求的 body 轉換為 JSON 字符串
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('GetChargerInfo response:', data);
+                updateResponseArea('GetChargerInfo', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+
+        function addIdTag() {
+            const idTag = document.getElementById('idTag').value;
+            const chargerId = document.getElementById('idTag_chargerId').value;
+        
+            // 檢查 idTag 和 chargerId 是否為空
+            if (!idTag.trim() || !chargerId.trim()) {
+                alert('idTag or chargerId cannot be empty');
+                return; // 如果為空，直接返回，不執行後續的請求
+            }
+        
+            fetch('/ocppAPI/idTags', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                },
+                body: JSON.stringify({ idTag, chargerId }) // 以物件形式發送 idTag 和 chargerId
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('AddIdTag response:', data);
+                updateResponseArea('AddIdTag', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        
+
+        function deleteIdTag() {
+            const idTag = document.getElementById('deleteIdTag').value;
+
+            fetch(`/ocppAPI/idTags/${idTag}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                }
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('DeleteIdTag response:', data);
+                updateResponseArea('DeleteIdTag', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function updateIdTag() {
+            const idTag = document.getElementById('updateIdTag').value;
+            const status = document.getElementById('updateStatus').value;
+
+            fetch(`/ocppAPI/idTags/${idTag}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                },
+                body: JSON.stringify({ status })
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('UpdateIdTag response:', data);
+                updateResponseArea('UpdateIdTag', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function getAllIdTags() {
+            fetch('/ocppAPI/idTags', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'neopower-api-key': 'neopower_ocpp_key'
+                }
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                console.log('GetAllIdTags response:', data);
+                updateResponseArea('GetAllIdTags', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function updateResponseArea(action, response) {
+            const responseArea = document.getElementById('responseArea');
+            responseArea.textContent = response;
+        }
+
+        function clearResponseArea() {
+            document.getElementById('responseArea').textContent = '';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1>OCPP Client Control</h1>
+            <div class="container_abreast">
+                <!-- 查詢所有樁的狀態 -->
+                <div>
+                    <h2>Get Connecting Chargers</h2>
+                    <button onclick="getAllClients()">Get Connecting Chargers</button>
+                </div>
+                <!-- 查詢充電隊列的狀態 -->
+                <div>
+                    <h2>Get Waiting Queue</h2>
+                    <button onclick="getWaitingQueue()">Get Waiting Queue</button>
+                </div>
+                <!-- Get Charger Info -->
+                <div>
+                    <h2>Get Charger Info</h2>
+                    <label for="chargerId_getChargerInfo">Charger ID:</label>
+                    <input type="text" id="chargerId_getChargerInfo" name="chargerId_getChargerInfo">
+                    <label for="key_getChargerInfo">Key:</label>
+                    <input type="text" id="key_getChargerInfo" name="key_getChargerInfo">
+                    <button onclick="getChargerInfo()">Get Charger Info</button>
+                </div>
+                <!-- Set Charger Info -->
+                <div>
+                    <h2>Set Charger Info</h2>
+                    <label for="chargerId_setChargerInfo">Charger ID:</label>
+                    <input type="text" id="chargerId_setChargerInfo" name="chargerId_setChargerInfo">
+                    <label for="key_setChargerInfo">Key:</label>
+                    <input type="text" id="key_setChargerInfo" name="key_setChargerInfo">
+                    <label for="value_setChargerInfo">Value:</label>
+                    <input type="text" id="value_setChargerInfo" name="value_setChargerInfo">
+                    <button onclick="setChargerInfo()">Set Charger Info</button>
+                </div>
+            </div>
+            
+            <div class="container_abreast">
+                <!-- Remote Start Charging -->
+                <div>
+                    <h2>Remote Start Charging</h2>
+                    <label for="startChargerId">Charger ID:</label>
+                    <input type="text" id="startChargerId" name="startChargerId" required>
+                    <button onclick="remoteStartCharging()">Remote Start Charging</button>
+                </div>
+                <!-- Get Composite Schedule -->
+                <div>
+                    <h2>Get Composite Schedule</h2>
+                    <label for="chargerId_getCompositeSchedule">Charger ID:</label>
+                    <input type="text" id="chargerId_getCompositeSchedule" name="chargerId_getCompositeSchedule" required>
+                    
+                    <label for="connectorId_getCompositeSchedule">Connector ID:</label>
+                    <input type="number" id="connectorId_getCompositeSchedule" name="connectorId_getCompositeSchedule" required>
+                    
+                    <label for="duration_getCompositeSchedule">Duration (seconds):</label>
+                    <input type="number" id="duration_getCompositeSchedule" name="duration_getCompositeSchedule" required>
+                    
+                    <label for="chargingRateUnit_getCompositeSchedule">Charging Unit (W or A):</label>
+                    <input type="text" id="chargingRateUnit_getCompositeSchedule" name="chargingRateUnit_getCompositeSchedule" required>
+                    
+                    <button onclick="getCompositeSchedule()">Get Composite Schedule</button>
+                </div>
+                <!-- Set Charging Profile -->
+                <div>
+                    <h2>Set Charging Profile</h2>
+                    <label for="chargerId_setChargingProfile">Charger ID:</label>
+                    <input type="text" id="chargerId_setChargingProfile" name="chargerId_setChargingProfile" required>
+                    <label for="connectorId_setChargingProfile">Connector ID:</label>
+                    <input type="number" id="connectorId_setChargingProfile" name="connectorId_setChargingProfile" required>
+                    <label for="limit_setChargingProfile">limit:</label>
+                    <input type="number" id="limit_setChargingProfile" name="limit_setChargingProfile" required>
+                    <label for="control_unit_setChargingProfile">Control Unit(W or A):</label>
+                    <input type="text" id="control_unit_setChargingProfile" name="control_unit_setChargingProfile" required>
+                    
+                    <button onclick="setChargingProfile()">Set Charging Profile</button>
+                </div>
+                <!-- Remote Stop Charging -->
+                <div>
+                    <h2>Remote Stop Charging</h2>
+                    <label for="stopTransactionId">Transaction ID:</label>
+                    <input type="text" id="stopTransactionId" name="stopTransactionId" required>
+                    <button onclick="remoteStopCharging()">Remote Stop Charging</button>
+                </div>
+            </div>
+            <h1>idTags Management</h1>
+            <div class="container_abreast">
+                <!-- Add idTag -->
+                <div>
+                    <h3>Add idTag</h3>
+                    <label for="idTag">idTag:</label>
+                    <input type="text" id="idTag" name="idTag">
+                    <label for="idTag_chargerId">chargerId:</label>
+                    <input type="text" id="idTag_chargerId" name="idTag_chargerId">
+                    <button onclick="addIdTag()">Add idTag</button>
+                </div>
+                <!-- Get All idTags -->
+                <div>
+                    <h3>Get All idTags</h3>
+                    <button onclick="getAllIdTags()">Get All idTags</button>
+                </div>
+                 <!-- Update idTag -->
+                <div>
+                    <h3>Update idTag</h3>
+                    <label for="updateIdTag">idTag:</label>
+                    <input type="text" id="updateIdTag" name="updateIdTag">
+                    <label for="updateStatus">Status:</label>
+                    <input type="text" id="updateStatus" name="updateStatus">
+                    <button onclick="updateIdTag()">Update idTag</button>
+                </div>
+                <!-- Delete idTag -->
+                <div>
+                    <h3>Delete idTag</h3>
+                    <label for="deleteIdTag">idTag:</label>
+                    <input type="text" id="deleteIdTag" name="deleteIdTag">
+                    <button onclick="deleteIdTag()">Delete idTag</button>
+                </div>
+            </div>
+        </div>
+        <!-- 回傳值顯示區域 -->
+        <div class="right-panel">
+            <div id="responseArea">
+                <!-- 回傳值顯示區域 -->
+            </div>
+            <!-- 清除按鈕 -->
+            <button class="clear-btn" onclick="clearResponseArea()">Clear</button>
+        </div>
+    </div>
+</body>
+</html>

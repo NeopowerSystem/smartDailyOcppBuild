@@ -1,0 +1,106 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    flex: 1;
+    padding: 20px;
+}
+
+.container_abreast{
+    display: flex;
+    justify-content: space-between; /* 控制兩個 div 之間的間距 */
+    gap: 20px; /* 可以用 gap 來調整 div 之間的距離 */
+}
+
+.container_abreast div {
+    flex: 1; /* 讓兩個 div 同樣分配寬度 */
+    padding: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1); /* 增加陰影效果 */
+}
+
+.left-panel {
+    width: 60%;
+    padding-right: 20px;
+    overflow-y: auto;
+    margin: 0 auto; /* 使整個左側面板水平置中 */
+}
+
+h1 {
+    text-align: center; /* 置中標題 */
+    padding: 10px; /* 增加內邊距讓框線和文字保持距離 */
+}
+
+.right-panel {
+    width: 40%;
+    padding: 20px;
+    background-color: #fff;
+    border-left: 1px solid #ccc;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+div {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="number"] {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #28a745;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+#responseArea {
+    flex: 1;
+    padding: 20px;
+    border: 1px solid #ccc;
+    white-space: pre-wrap;
+    background-color: #e9ecef;
+    border-radius: 8px;
+    overflow-y: auto;
+}
+
+.clear-btn {
+    background-color: #dc3545;
+    margin-top: 10px;
+    width: 60px;
+}
+
+.clear-btn:hover {
+    background-color: #c82333;
+}

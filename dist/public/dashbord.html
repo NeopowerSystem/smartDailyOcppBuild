@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>充電樁儀表板</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .controls {
+      width: 300px;
+      padding: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    .controls label {
+      font-size: 14px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .controls input {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      margin-top: 6px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      background-color: #fafafa;
+    }
+
+    .controls input:focus {
+      border-color: #4CAF50;
+      outline: none;
+    }
+
+    .controls button {
+      padding: 12px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .controls button:hover {
+      background-color: #45a049;
+    }
+
+    .dashboard-container {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .tile {
+      width: 180px;
+      height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .tile:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .status-0 { background-color: #E0E0E0; color: #333; }
+    .status-1 { background-color: #2196F3; color: #333;}
+    .status-2 { background-color: #ce58e6dc; color: #333;}
+    .status-3 { background-color: #95ec73; color: #333; }
+    .status-4 { background-color: #FFE0B2; color: #333;}
+    .status-5 { background-color: #f15757; color: #333;}
+    .status-6 { background-color: #2e2d2d;}
+
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 1000;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    .modal h3 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .modal p {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 999;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 控制部分 -->
+    <div class="controls">
+      <label>
+        <strong>站名：</strong>
+        <span>{{ stationName }}</span>
+      </label>
+      <label>
+        <strong>契約容量：</strong>
+        <input type="number" v-model="contractCapacity" min="0" step="1" placeholder="請輸入契約容量 (kW)" />
+      </label>
+
+      <label>
+        <strong>充電模式(1均流2先到)：</strong>
+        <input type="text" v-model="chargingMode" placeholder="請輸入充電模式" />
+      </label>
+
+      <label>
+        <strong>允許的特斯拉數量：</strong>
+        <input type="number" v-model="numSmartMeter" min="0" step="1" placeholder="請輸入特斯拉數量" />
+      </label>
+
+      <label>
+        <strong>預留值：</strong>
+        <input type="number" v-model="reservedPower" min="0" step="1" placeholder="請輸入預留值 (kW)" />
+      </label>
+      <button @click="updateSettings">更新設定</button>
+    </div>
+
+    <!-- 儀表板 -->
+    <div class="dashboard-container">
+      <div class="dashboard">
+        <div
+          class="tile"
+          v-for="charger in chargers"
+          :key="charger.chargerId"
+          :class="'status-' + charger.connectors[0].status_code"
+          @click="charger.connectors[0].status_code === 2 && showDetails(charger)"
+        >
+          <p>{{ charger.chargerId }}</p>
+          <template v-if="charger.connectors[0].status_code === 2">
+            <p>電流: {{ charger.connectors[0].current }} A</p>
+            <p>功率: {{ charger.connectors[0].power }} kW</p>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- 彈出視窗 -->
+    <div class="overlay" :class="{ active: modalVisible }" @click="closeModal"></div>
+    <div class="modal" :class="{ active: modalVisible }">
+      <h3>充電樁詳細資訊</h3>
+      <p>電壓: {{ selectedCharger?.connectors[0].voltage }} V</p>
+      <p>SOC: {{ selectedCharger?.connectors[0].soc }}%</p>
+      <p>功率: {{ selectedCharger?.connectors[0].power }} kW</p>
+      <p>電流: {{ selectedCharger?.connectors[0].current }} A</p>
+      <button @click="closeModal">關閉</button>
+    </div>
+  </div>
+
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          contractCapacity: null,
+          chargingMode: null,
+          numSmartMeter: null,
+          reservedPower: null,
+          chargers: [],
+          modalVisible: false,
+          selectedCharger: null,
+          stationName: 'StationTest'
+        };
+      },
+      mounted() {
+        this.fetchParameters();
+        this.fetchData();
+        setInterval(this.fetchData, 5000); // 每5秒刷新
+      },
+      methods: {
+        fetchParameters() {
+          fetch(`/ocppAPI/chargingParameter`, {
+            method: 'GET',
+            headers: {
+              'neopower-api-key': 'neopower_ocpp_key',
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            this.contractCapacity = data.data.contract_capacity || null;
+            this.chargingMode = data.data.charging_mode || null;
+            this.numSmartMeter = data.data.smart_meter_num || null;
+            this.reservedPower = data.data.reserve_value || null;
+          })
+          .catch(err => console.error('Error fetching charging parameters:', err));
+        },
+        fetchData() {
+          fetch('/ocppAPI/getAllClient',{
+            method: 'POST',
+            headers:{
+                'neopower-api-key': 'neopower_ocpp_key'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+              this.chargers = data;
+            })
+            .catch(err => console.error('Error fetching chargers:', err));
+        },
+        showDetails(charger) {
+          this.selectedCharger = charger;
+          this.modalVisible = true;
+        },
+        closeModal() {
+          this.modalVisible = false;
+        },
+        updateSettings() {
+          fetch('/ocppAPI/chargingParameter', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'neopower-api-key': 'neopower_ocpp_key',
+            },
+            body: JSON.stringify({
+              contract_capacity: this.contractCapacity,
+              smart_meter_num: this.numSmartMeter,
+              charging_mode: this.chargingMode,
+              reserve_value: this.reservedPower,
+            }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            alert('充電模式設定已更新');
+            console.log('Updated mode settings:', data);
+          })
+          .catch(err => {
+            alert('充電模式設定更新失敗');
+            console.error('Error updating mode settings:', err);
+          });
+        }
+      }
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>
